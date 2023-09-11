@@ -14,3 +14,6 @@
 
 ## Ссылка на репозиторий
 https://github.com/Anna-Borovkova/movies-explorer-api
+
+## Ссылка на публичный сервер
+https://api.bitfilms.nomoredomainsicu.ru/
