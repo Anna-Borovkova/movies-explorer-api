@@ -6,6 +6,13 @@ const UnauthorizedError = require('../errors/unauthorized-error');
 const NotFoundError = require('../errors/not-found-error');
 const BadRequestError = require('../errors/bad-request-error');
 const ConflictError = require('../errors/conflict-error');
+const {
+  inputDataIncorrect,
+  emailAlreadyExists,
+  userNotFound,
+  passwordIsIncorrect,
+  success,
+} = require('../utils/messages');
 
 const SALT_ROUNDS = 10;
 const { JWT_SECRET = 'SECRET_KEY' } = process.env;
@@ -28,10 +35,10 @@ const createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'MongoServerError' && err.code === 11000) {
-        return next(new ConflictError('Email already exists'));
+        return next(new ConflictError(emailAlreadyExists));
       }
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Input data uncorrect'));
+        return next(new BadRequestError(inputDataIncorrect));
       }
       return next(err);
     });
@@ -44,13 +51,16 @@ const updateUserProfile = (req, res, next) => {
     { name, email },
     { new: true, runValidators: true },
   )
-    .orFail(() => new NotFoundError('User not found'))
+    .orFail(() => new NotFoundError(userNotFound))
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Input data incorrect'));
+        return next(new BadRequestError(inputDataIncorrect));
+      }
+      if (err.name === 'MongoServerError') {
+        return next(new BadRequestError(inputDataIncorrect));
       }
       return next(err);
     });
@@ -59,17 +69,17 @@ const updateUserProfile = (req, res, next) => {
 const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findOne({ email }).select('+password')
-    .orFail(() => new UnauthorizedError('User not found'))
+    .orFail(() => new UnauthorizedError(userNotFound))
     .then((user) => {
       bcrypt.compare(password, user.password, (err, isValidPassword) => {
         if (!isValidPassword) {
-          return next(new UnauthorizedError('Password is incorrect'));
+          return next(new UnauthorizedError(passwordIsIncorrect));
         }
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
         return res.cookie('jwt', token, {
           maxAge: 3600000,
           httpOnly: true,
-        }).send({ message: 'Success' })
+        }).send({ message: success })
           .end();
       });
     })
@@ -80,7 +90,7 @@ const login = (req, res, next) => {
 
 const getCurrentUserById = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail(() => new NotFoundError('User not found'))
+    .orFail(() => new NotFoundError(userNotFound))
     .then((user) => {
       res.send(user);
     })

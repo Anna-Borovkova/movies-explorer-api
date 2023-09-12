@@ -24,11 +24,11 @@ router.post('/signin', celebrate({
   }),
 }), login);
 
+router.use(auth);
+
 router.get('/signout', (req, res) => {
   res.clearCookie('jwt').send({ message: 'Выход' });
 });
-
-router.use(auth);
 
 router.use(usersRouter);
 router.use(moviesRouter);

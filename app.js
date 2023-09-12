@@ -11,7 +11,7 @@ const errorHandler = require('./middlewares/error-handler');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const app = express();
-const { PORT = 3000, MONGODB_URL = 'mongodb://127.0.0.1:27017/moviesdb' } = process.env;
+const { PORT = 3000, MONGODB_URL = 'mongodb://127.0.0.1:27017/bitfilmsdb' } = process.env;
 
 mongoose
   .connect(MONGODB_URL, {
@@ -39,8 +39,6 @@ app.use(errorLogger); // подключаем логгер ошибок
 
 app.use(errors());
 app.use(errorHandler);
-
-console.log(process.env.NODE_ENV);
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
